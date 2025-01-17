@@ -1,6 +1,6 @@
 % Create the figure window
 f = figure('Name', 'Scientific Calculator', 'NumberTitle', 'off', ...
-           'Position', [300, 300, 400, 500]);
+           'Position', [200, 200, 400, 500], 'MenuBar', 'none');
 
 % Create the text box (display)
 t = uicontrol('Style', 'text', 'String', '', 'Position', [10, 450, 380, 40], ...
@@ -15,7 +15,9 @@ xSpacing = 10;
 ySpacing = 10;
 
 % Define the button labels
-buttons = {'7', '8', '9', '/';
+buttons = {'sin', 'cos', 'tan', 'sqrt';
+           'log', 'exp', 'C', 'm';
+           '7', '8', '9', '/';
            '4', '5', '6', '*';
            '1', '2', '3', '-';
            'C', '0', '=', '+'};
@@ -57,6 +59,24 @@ function buttonClick(displayBox, buttonValue)
         catch
             set(displayBox, 'String', 'Error'); % Display error if invalid
         end
+
+    elseif any(strcmp({'sin', 'cos', 'tan', 'sqrt', 'log', 'exp'},buttonValue))
+            % Handle trigonometric or special functions
+            if isempty(currentText)
+                set(displayBox, 'String', 'Error'); % Display error if no input
+            else
+                % Convert to radians for trigonometric functions
+                value = str2double(currentText);
+                switch buttonValue
+                    case 'sin', result = sin(deg2rad(value));
+                    case 'cos', result = cos(deg2rad(value));
+                    case 'tan', result = tan(deg2rad(value));
+                    case 'sqrt', result = sqrt(value);
+                    case 'log', result = log(value);
+                    case 'exp', result = exp(value);
+                end
+                set(displayBox, 'String', num2str(result));
+            end
     else
         % Append the button's value to the display
         set(displayBox, 'String', [currentText, buttonValue]);

@@ -41,7 +41,6 @@ for row = 1:numRows
 end
 
 
-
 % Define the callback function
 function buttonClick(displayBox, buttonValue)
     % Get the current text in the display

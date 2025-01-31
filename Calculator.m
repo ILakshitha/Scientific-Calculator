@@ -1,121 +1,135 @@
-function scientific_calculator()
-    % Create the main figure window
-    f = figure('Position', [100, 100, 500, 700], ...
-               'Name', 'Scientific Calculator', ...
-               'NumberTitle', 'off', ...
-               'Color', [0.1, 0.1, 0.1]);
+% Create the figure window
+f = figure('Name', 'Scientific Calculator', 'NumberTitle', 'off', ...
+           'Position', [200, 200, 400, 550], 'MenuBar', 'none', ...
+           'Resize', 'off');
 
-    % Display screen
-    display = uicontrol('Style', 'text', ...
-                        'Position', [20, 600, 460, 60], ...
-                        'FontSize', 20, ...
-                        'HorizontalAlignment', 'right', ...
-                        'BackgroundColor', [0.3, 0.3, 0.3], ...
-                        'ForegroundColor', 'white', ...
-                        'String', '0');
+% Create the text box (display)
+t = uicontrol('Style', 'text', 'String', '', 'Position', [10, 480, 380, 50], ...
+              'FontSize', 20, 'HorizontalAlignment', 'right', ...
+              'BackgroundColor', 'white');
 
-    % Define button layout
-    button_layout = {
-         'π', '!', '(', ')', '%', 'CE';
-         'sin', 'ln', '7', '8', '9', '/';
-         'cos', 'log', '4', '5', '6', '*';
-         'tan', '√', '1', '2', '3', '-';
-         'EXP', '^', '0', '.', '=', '+'
-    };
+% Memory variable
+memoryValue = 0;
+degreesMode = true; % Default to degrees mode
 
-    % Button colors and dimensions
-    button_bg_color = [0.15, 0.15, 0.15];
-    button_fg_color = 'white';
-    button_width = 60;
-    button_height = 40;
-    button_spacing = 10;
+% Define button properties
+buttonWidth = 80;
+buttonHeight = 50;
+xOffset = 10;
+yOffset = 420;
+xSpacing = 10;
+ySpacing = 10;
 
-    % Create buttons dynamically
-    for row = 1:size(button_layout, 1)
-        for col = 1:size(button_layout, 2)
-            if ~isempty(button_layout{row, col})
-                uicontrol('Style', 'pushbutton', ...
-                          'String', button_layout{row, col}, ...
-                          'Position', [20 + (col-1)*(button_width + button_spacing), ...
-                                       600 - row*(button_height + button_spacing), ...
-                                       button_width, button_height], ...
-                          'FontSize', 14, ...
-                          'BackgroundColor', button_bg_color, ...
-                          'ForegroundColor', button_fg_color, ...
-                          'Callback', @(src, ~) button_pressed(src, display));
-            end
-        end
+% Define the button labels
+buttons = {'sin', 'cos', 'tan', 'sqrt';
+           'log', 'log10', 'exp', '^';
+           '7', '8', '9', '/';
+           '4', '5', '6', '*';
+           '1', '2', '3', '-';
+           'C', '0', '=', '+';
+           'm', 'mr', 'deg/rad', '!'};
+
+% Get number of rows and columns
+[numRows, numCols] = size(buttons);
+
+% Loop through the button matrix and create buttons
+for row = 1:numRows
+    for col = 1:numCols
+        % Calculate position for each button
+        xPos = xOffset + (col - 1) * (buttonWidth + xSpacing);
+        yPos = yOffset - (row - 1) * (buttonHeight + ySpacing);
+        
+        % Create each button
+        uicontrol('Style', 'pushbutton', 'String', buttons{row, col}, ...
+                  'Position', [xPos, yPos, buttonWidth, buttonHeight], ...
+                  'FontSize', 14, ...
+                  'Callback', @(src, event)buttonClick(t, buttons{row, col}));
     end
-
-    % Button press handling
-    function button_pressed(src, display)
-        current_text = get(display, 'String');
-        button_text = get(src, 'String');
-
-        if strcmp(button_text, '=') % Evaluate the expression
-            try
-                % Prepare the expression
-                expr = current_text;
-
-                % Automatically insert parentheses if missing
-                expr = regexprep(expr, '\bsin\s+([^\s]+)', 'sin($1)');
-                expr = regexprep(expr, '\bcos\s+([^\s]+)', 'cos($1)');
-                expr = regexprep(expr, '\btan\s+([^\s]+)', 'tan($1)');
-                expr = regexprep(expr, '√\s*([^\s]+)', 'sqrt($1)');
-                expr = regexprep(expr, '\bln\s+([^\s]+)', 'log($1)'); % Natural logarithm
-                expr = regexprep(expr, '\blog\s+([^\s]+)', 'log10($1)'); % Base-10 logarithm
-                expr = regexprep(expr, '\bEXP\s+([^\s]+)', 'exp($1)'); % Exponential function
-
-                % Replace constants and operators
-                expr = strrep(expr, 'π', 'pi'); % Replace π with pi
-                expr = strrep(expr, '^', '.^'); % Replace ^ with element-wise power
-                expr = strrep(expr, '!', 'factorial'); % Replace ! with factorial
-
-                % Evaluate the final expression
-                result = eval(expr);
-                set(display, 'String', num2str(result));
-            catch
-                set(display, 'String', 'Error');
-            end
-        elseif strcmp(button_text, 'CE') % Clear display
-            set(display, 'String', '0');
-        elseif strcmp(button_text, '%') % Handle percentage
-            try
-                value = str2double(current_text);
-                result = value / 100;
-                set(display, 'String', num2str(result));
-            catch
-                set(display, 'String', 'Error');
-            end
-        elseif ismember(button_text, {'sin', 'cos', 'tan', 'ln', 'log', 'EXP', '√'}) % Handle functions
-            % Append the function with an opening parenthesis
-            if strcmp(current_text, '0') || strcmp(current_text, 'Error')
-                set(display, 'String', [button_text '(']);
-            else
-                set(display, 'String', [current_text button_text '(']);
-            end
-        elseif strcmp(button_text, 'π') % Handle constant π
-            if strcmp(current_text, '0') || strcmp(current_text, 'Error')
-                set(display, 'String', 'π');
-            else
-                set(display, 'String', [current_text 'π']);
-            end
-        elseif strcmp(button_text, '!') % Handle factorial
-            try
-                value = str2double(current_text);
-                result = factorial(value);
-                set(display, 'String', num2str(result));
-            catch
-                set(display, 'String', 'Error');
-            end
-        else
-            % Append the button text to the current text
-            if strcmp(current_text, '0') || strcmp(current_text, 'Error')
-                set(display, 'String', button_text);
-            else
-                set(display, 'String', [current_text button_text]);
-            end
-        end
-    end
-    uiwait(f)
 end
+
+% Define the callback function
+function buttonClick(displayBox, buttonValue)
+    global memoryValue degreesMode; % Access global variables
+
+    % Get the current text in the display
+    currentText = get(displayBox, 'String'); 
+    
+    % Handle button actions
+    switch buttonValue
+        case 'C'
+            % Clear the display
+            set(displayBox, 'String', '');
+        case '='
+            % Evaluate the expression
+            try
+                result = eval(currentText); % Evaluate the expression
+                set(displayBox, 'String', num2str(result));
+            catch
+                set(displayBox, 'String', 'Error'); % Display error if invalid
+            end
+        case {'sin', 'cos', 'tan', 'sqrt', 'log', 'log10', 'exp', '^', '!'}
+            % Handle scientific functions
+            if isempty(currentText)
+                set(displayBox, 'String', 'Error'); % Display error if no input
+            else
+                value = str2double(currentText);
+                switch buttonValue
+                    case 'sin'
+                        if degreesMode
+                            result = sind(value); % Use degrees
+                        else
+                            result = sin(value); % Use radians
+                        end
+                    case 'cos'
+                        if degreesMode
+                            result = cosd(value); % Use degrees
+                        else
+                            result = cos(value); % Use radians
+                        end
+                    case 'tan'
+                        if degreesMode
+                            result = tand(value); % Use degrees
+                        else
+                            result = tan(value); % Use radians
+                        end
+                    case 'sqrt'
+                        result = sqrt(value);
+                    case 'log'
+                        result = log(value);
+                    case 'log10'
+                        result = log10(value);
+                    case 'exp'
+                        result = exp(value);
+                    case '^'
+                        result = str2double(currentText) ^ 2; % Square
+                    case '!'
+                        result = factorial(value);
+                end
+                set(displayBox, 'String', num2str(result));
+            end
+        case 'm'
+            % Store current display value in memory
+            if ~isempty(currentText)
+                memoryValue = str2double(currentText);
+            end
+        case 'mr'
+            % Recall memory value to display
+            set(displayBox, 'String', num2str(memoryValue));
+        case 'deg/rad'
+            % Toggle between degrees and radians mode
+            degreesMode = ~degreesMode;
+            if degreesMode
+                set(displayBox, 'String', 'Degrees Mode');
+            else
+                set(displayBox, 'String', 'Radians Mode');
+            end
+            pause(1); % Show mode for 1 second
+            set(displayBox, 'String', '');
+        otherwise
+            % Append the button's value to the display
+            set(displayBox, 'String', [currentText, buttonValue]);
+    end
+end
+
+% Wait for user interaction
+uiwait(f);

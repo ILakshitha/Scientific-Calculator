@@ -20,6 +20,7 @@ yOffset = 420;
 xSpacing = 10;
 ySpacing = 10;
 
+
 % Define the button labels
 buttons = {'sin', 'cos', 'tan', 'sqrt';
            'log', 'log10', 'exp', '^';
